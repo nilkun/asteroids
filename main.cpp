@@ -243,50 +243,87 @@ int main()
     currentTime = SDL_GetTicks();
     fElapsedTime = (currentTime - previousTime) * 0.001;
     screen -> clear();
-    int idx=0;  
-
-    asteroids -> arr[idx].update(fElapsedTime, SCREENWIDTH, SCREENHEIGHT);
-
-    std::vector<int> removeBullet;
-
+     
+// TODO collision bullet and asteroid create new asteroid;
     for(int idx = asteroids -> arr.size()-1; idx >= 0; idx--) {
-          if(asteroids -> arr[idx].collision(ship)) restart(&ship, &asteroids);
+
+      asteroids -> arr[idx].update(fElapsedTime, SCREENWIDTH, SCREENHEIGHT);
+      if(asteroids -> arr[idx].collision(ship)) restart(&ship, &asteroids);
       for(int i = 0; i < ship -> bullets.size(); i++) {
-        if(asteroids -> arr[0].collision(&(ship -> bullets[i]))) {
-          removeBullet.push_back(i);
-          asteroids -> arr.erase(asteroids -> arr.begin() + i);
+        if(asteroids -> arr[idx].collision(&(ship -> bullets[i]))) {
+          ship -> bullets.erase(ship -> bullets.begin() + i);
+           
+          if(asteroids -> arr[idx].size > 4) {
+
+          
+          float no1 = (float)rand() / (float)RAND_MAX * 6.28318f; 
+          float no2 = (float)rand() / (float)RAND_MAX * 6.28318f;
+          float no3 = (float)rand() / (float)RAND_MAX * 6.28318f; 
+          float no4 = (float)rand() / (float)RAND_MAX * 6.28318f;
           Ship one;
+          one.size = asteroids -> arr[idx].size / 2;
+          one.angle = 1;
+          one.position = std::make_pair(asteroids -> arr[idx].position.first, asteroids -> arr[idx].position.second);
+          one.direction = std::make_pair( no1, no2);
+
+          int verts = asteroids -> arr[idx].model.size();
+          for(int i= 0; i < verts; i++) {
+            float radius = one.size;
+            float a = ((float)i / (float)verts) * 6.28318f; // get 20 angles points
+            float scale = 1 - ((rand()%10) *.01);
+            std::cout << scale << std::endl;
+            one.model.push_back(std::make_pair(scale * radius * sinf(a), scale * radius * cosf(a)));
+          }
+
           Ship two;
-          asteroids -> arr.push_back(one);
-          asteroids -> arr.push_back(two);
+          two.size = asteroids -> arr[idx].size / 2;
+          two.angle = 1;
+          two.position = std::make_pair(asteroids -> arr[idx].position.first, asteroids -> arr[idx].position.second);
+          two.direction = std::make_pair(no3, no4);
+
+          verts = asteroids -> arr[idx].model.size();
+          for(int i= 0; i < verts; i++) {
+            float radius = two.size;
+            float a = ((float)i / (float)verts) * 6.28318f; // get 20 angles points
+            float scale = 1 - ((rand()%10) *.01);
+            std::cout << scale << std::endl;
+            two.model.push_back(std::make_pair(scale * radius * sinf(a), scale * radius * cosf(a)));
+
+          }
+            asteroids -> arr.push_back(one);
+            asteroids -> arr.push_back(two);
+          };
+          asteroids -> arr.erase(asteroids -> arr.begin() + idx);
+          
         };
+      };
     };
-    }
-
-        while(!removeBullet.empty()) {
-      ship -> bullets.erase(ship -> bullets.begin() + removeBullet.back());
-      removeBullet.pop_back();
-    }
-
 
     ship -> update(fElapsedTime, SCREENWIDTH, SCREENHEIGHT);
     events.poll(ship, fElapsedTime);
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 0);
-    int idx2 = 0;
-        ;
+    
+    int idx = 0;        
+    std::vector<int> removeBullet;
+
     for(auto &b : ship -> bullets) {
-      if(b.updateB(fElapsedTime, SCREENWIDTH, SCREENHEIGHT)) removeBullet.push_back(idx2);
+      if(b.updateB(fElapsedTime, SCREENWIDTH, SCREENHEIGHT)) removeBullet.push_back(idx);
       SDL_RenderDrawPoint(renderer, b.position.first, b.position.second);
-      idx2++;
+      idx++;
     }
+
     while(!removeBullet.empty()) {
       ship -> bullets.erase(ship -> bullets.begin() + removeBullet.back());
       removeBullet.pop_back();
     }
+
     drawWireFrame(ship, renderer, fElapsedTime);
-    drawWireFrame(&asteroids -> arr[idx], renderer, fElapsedTime);
+
+    for(auto &aste: asteroids -> arr) {
+      drawWireFrame(&aste, renderer, fElapsedTime);
+    }
 
     screen -> render();
-  }
+  };
   return 0;
 }
